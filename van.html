@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="vi">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trò Chơi Nối Từ Vựng</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    html, body {
+      height: 100%;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header h1 {
+      margin: 0 0 10px 0;
+      color: #2d3748;
+      font-size: 32px;
+      font-weight: bold;
+    }
+    
+    .header p {
+      margin: 0;
+      color: #4a5568;
+      font-size: 16px;
+    }
+    
+    .score-board {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 15px;
+      gap: 15px;
+    }
+    
+    .score-item {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .game-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+    
+    .column {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+    }
+    
+    .column h2 {
+      text-align: center;
+      margin: 0 0 20px 0;
+      color: #2d3748;
+      font-size: 24px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid #667eea;
+    }
+    
+    .term-card, .definition-card {
+      padding: 18px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 3px solid transparent;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    
+    .term-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+    }
+    
+    .definition-card {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+    
+    .term-card:hover, .definition-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .term-card.selected {
+      border-color: #ffd700;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+      transform: scale(1.05);
+    }
+    
+    .definition-card.selected {
+      border-color: #ffd700;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+      transform: scale(1.05);
+    }
+    
+    .term-card.matched, .definition-card.matched {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      opacity: 0.7;
+      cursor: not-allowed;
+      animation: matchPulse 0.6s ease;
+    }
+    
+    @keyframes matchPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    .controls {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .btn {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-hint {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+    
+    .btn-reset {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+    }
+    
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .feedback {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+    }
+    
+    .feedback.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .feedback.correct {
+      border: 5px solid #38ef7d;
+    }
+    
+    .feedback.incorrect {
+      border: 5px solid #f5576c;
+    }
+    
+    .feedback h2 {
+      margin: 0 0 15px 0;
+      font-size: 36px;
+    }
+    
+    .feedback p {
+      margin: 0;
+      font-size: 20px;
+      color: #4a5568;
+    }
+    
+    .celebration {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+    
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #f093fb;
+      opacity: 0;
+    }
+    
+    @keyframes confettiFall {
+      0% { 
+        transform: translateY(-100%) rotate(0deg);
+        opacity: 1;
+      }
+      100% { 
+        transform: translateY(100%) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    .hint-box {
+      background: rgba(255, 243, 205, 0.95);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      border-left: 5px solid #f5576c;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+    
+    .hint-box.show {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .hint-box h3 {
+      margin: 0 0 10px 0;
+      color: #2d3748;
+      font-size: 18px;
+    }
+    
+    .hint-box p {
+      margin: 0;
+      color: #4a5568;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    
+    @media (max-width: 768px) {
+      .game-area {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+      }
+      
+      .score-board {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="celebration" id="celebration"></div>
+  <div class="container">
+   <div class="header">
+    <h1 id="gameTitle">🔷 Trò Chơi Nối Từ Vựng Hình Học</h1>
+    <p id="instructionText">Nối các thuật ngữ hình học với định nghĩa đúng của chúng</p>
+    <div class="score-board">
+     <div class="score-item">
+      ✅ Đúng: <span id="correctCount">0</span>
+     </div>
+     <div class="score-item">
+      ❌ Sai: <span id="incorrectCount">0</span>
+     </div>
+     <div class="score-item">
+      💡 Gợi ý: <span id="hintsUsed">0</span>
+     </div>
+    </div>
+   </div>
+   <div class="hint-box" id="hintBox">
+    <h3>💡 Gợi ý:</h3>
+    <p id="hintText"></p>
+   </div>
+   <div class="game-area">
+    <div class="column">
+     <h2>📚 Thuật Ngữ</h2>
+     <div id="termsColumn"></div>
+    </div>
+    <div class="column">
+     <h2>📝 Định Nghĩa</h2>
+     <div id="definitionsColumn"></div>
+    </div>
+   </div>
+   <div class="controls"><button class="btn btn-hint" id="hintBtn">💡 Gợi Ý</button> <button class="btn btn-reset" id="resetBtn">🔄 Chơi Lại</button>
+   </div>
+  </div>
+  <div class="feedback" id="feedback">
+   <h2 id="feedbackEmoji"></h2>
+   <p id="feedbackText"></p>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: "🔷 Trò Chơi Nối Từ Vựng Hình Học",
+      instruction_text: "Nối các thuật ngữ hình học với định nghĩa đúng của chúng",
+      success_message: "🎉 Xuất sắc! Bạn đã hoàn thành tất cả!",
+      primary_color: "#667eea",
+      secondary_color: "#f093fb",
+      text_color: "#2d3748",
+      correct_color: "#38ef7d",
+      incorrect_color: "#f5576c",
+      font_family: "Arial",
+      font_size: 16
+    };
+
+    const vocabularyData = [
+      {
+        id: 1,
+        term: "Tam giác",
+        definition: "Hình có ba cạnh và ba góc",
+        hint: "Đây là hình có số cạnh ít nhất trong các đa giác"
+      },
+      {
+        id: 2,
+        term: "Hình vuông",
+        definition: "Tứ giác có bốn cạnh bằng nhau và bốn góc vuông",
+        hint: "Tất cả các cạnh và góc đều bằng nhau"
+      },
+      {
+        id: 3,
+        term: "Hình tròn",
+        definition: "Tập hợp các điểm cách đều một điểm cố định",
+        hint: "Không có góc, hoàn toàn tròn"
+      },
+      {
+        id: 4,
+        term: "Hình chữ nhật",
+        definition: "Tứ giác có bốn góc vuông và các cạnh đối bằng nhau",
+        hint: "Giống hình vuông nhưng cạnh không nhất thiết bằng nhau"
+      },
+      {
+        id: 5,
+        term: "Hình thoi",
+        definition: "Tứ giác có bốn cạnh bằng nhau",
+        hint: "Giống hình vuông nhưng góc không nhất thiết vuông"
+      },
+      {
+        id: 6,
+        term: "Hình thang",
+        definition: "Tứ giác có hai cạnh đối song song",
+        hint: "Chỉ có một cặp cạnh song song"
+      }
+    ];
+
+    let gameState = {
+      selectedTerm: null,
+      selectedDefinition: null,
+      matchedPairs: new Set(),
+      correctCount: 0,
+      incorrectCount: 0,
+      hintsUsed: 0,
+      shuffledDefinitions: []
+    };
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function initializeGame() {
+      gameState.shuffledDefinitions = shuffleArray(vocabularyData);
+      renderGame();
+      updateScores();
+    }
+
+    function renderGame() {
+      const termsColumn = document.getElementById('termsColumn');
+      const definitionsColumn = document.getElementById('definitionsColumn');
+      
+      termsColumn.innerHTML = '';
+      definitionsColumn.innerHTML = '';
+      
+      vocabularyData.forEach(item => {
+        const termCard = document.createElement('div');
+        termCard.className = 'term-card';
+        termCard.dataset.id = item.id;
+        termCard.textContent = item.term;
+        
+        if (gameState.matchedPairs.has(item.id)) {
+          termCard.classList.add('matched');
+        } else {
+          termCard.addEventListener('click', () => selectTerm(item.id));
+        }
+        
+        termsColumn.appendChild(termCard);
+      });
+      
+      gameState.shuffledDefinitions.forEach(item => {
+        const defCard = document.createElement('div');
+        defCard.className = 'definition-card';
+        defCard.dataset.id = item.id;
+        defCard.textContent = item.definition;
+        
+        if (gameState.matchedPairs.has(item.id)) {
+          defCard.classList.add('matched');
+        } else {
+          defCard.addEventListener('click', () => selectDefinition(item.id));
+        }
+        
+        definitionsColumn.appendChild(defCard);
+      });
+    }
+
+    function selectTerm(id) {
+      if (gameState.matchedPairs.has(id)) return;
+      
+      document.querySelectorAll('.term-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      const card = document.querySelector(`.term-card[data-id="${id}"]`);
+      card.classList.add('selected');
+      gameState.selectedTerm = id;
+      
+      if (gameState.selectedDefinition !== null) {
+        checkMatch();
+      }
+    }
+
+    function selectDefinition(id) {
+      if (gameState.matchedPairs.has(id)) return;
+      
+      document.querySelectorAll('.definition-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      
+      const card = document.querySelector(`.definition-card[data-id="${id}"]`);
+      card.classList.add('selected');
+      gameState.selectedDefinition = id;
+      
+      if (gameState.selectedTerm !== null) {
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      const isCorrect = gameState.selectedTerm === gameState.selectedDefinition;
+      
+      if (isCorrect) {
+        gameState.correctCount++;
+        gameState.matchedPairs.add(gameState.selectedTerm);
+        showFeedback(true, "🎉 Chính xác!");
+        createConfetti();
+        
+        setTimeout(() => {
+          renderGame();
+          if (gameState.matchedPairs.size === vocabularyData.length) {
+            showCompletionMessage();
+          }
+        }, 800);
+      } else {
+        gameState.incorrectCount++;
+        showFeedback(false, "❌ Thử lại nhé!");
+        
+        setTimeout(() => {
+          document.querySelectorAll('.term-card, .definition-card').forEach(card => {
+            card.classList.remove('selected');
+          });
+        }, 1000);
+      }
+      
+      gameState.selectedTerm = null;
+      gameState.selectedDefinition = null;
+      updateScores();
+      document.getElementById('hintBox').classList.remove('show');
+    }
+
+    function showFeedback(isCorrect, message) {
+      const feedback = document.getElementById('feedback');
+      const emoji = document.getElementById('feedbackEmoji');
+      const text = document.getElementById('feedbackText');
+      
+      feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      emoji.textContent = isCorrect ? '✨' : '💫';
+      text.textContent = message;
+      feedback.classList.add('show');
+      
+      setTimeout(() => {
+        feedback.classList.remove('show');
+      }, 1500);
+    }
+
+    function createConfetti() {
+      const celebration = document.getElementById('celebration');
+      const colors = ['#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#38ef7d', '#ffd700'];
+      
+      for (let i = 0; i < 30; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        confetti.style.animation = 'confettiFall 2s ease-out forwards';
+        celebration.appendChild(confetti);
+        
+        setTimeout(() => confetti.remove(), 2000);
+      }
+    }
+
+    function showCompletionMessage() {
+      setTimeout(() => {
+        const message = window.elementSdk?.config?.success_message || defaultConfig.success_message;
+        showFeedback(true, message);
+        createConfetti();
+      }, 500);
+    }
+
+    function updateScores() {
+      document.getElementById('correctCount').textContent = gameState.correctCount;
+      document.getElementById('incorrectCount').textContent = gameState.incorrectCount;
+      document.getElementById('hintsUsed').textContent = gameState.hintsUsed;
+    }
+
+    function showHint() {
+      if (gameState.selectedTerm === null) {
+        showFeedback(false, "Chọn một thuật ngữ trước!");
+        return;
+      }
+      
+      const item = vocabularyData.find(v => v.id === gameState.selectedTerm);
+      if (item && !gameState.matchedPairs.has(item.id)) {
+        document.getElementById('hintText').textContent = item.hint;
+        document.getElementById('hintBox').classList.add('show');
+        gameState.hintsUsed++;
+        updateScores();
+      }
+    }
+
+    function resetGame() {
+      gameState = {
+        selectedTerm: null,
+        selectedDefinition: null,
+        matchedPairs: new Set(),
+        correctCount: 0,
+        incorrectCount: 0,
+        hintsUsed: 0,
+        shuffledDefinitions: []
+      };
+      
+      document.getElementById('hintBox').classList.remove('show');
+      initializeGame();
+    }
+
+    document.getElementById('hintBtn').addEventListener('click', showHint);
+    document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+    async function onConfigChange(config) {
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'Arial, sans-serif';
+      const baseSize = config.font_size || defaultConfig.font_size;
+      
+      document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      
+      document.getElementById('gameTitle').textContent = config.game_title || defaultConfig.game_title;
+      document.getElementById('gameTitle').style.fontSize = `${baseSize * 2}px`;
+      document.getElementById('gameTitle').style.color = config.text_color || defaultConfig.text_color;
+      
+      document.getElementById('instructionText').textContent = config.instruction_text || defaultConfig.instruction_text;
+      document.getElementById('instructionText').style.fontSize = `${baseSize}px`;
+      
+      document.querySelectorAll('.term-card, .definition-card').forEach(card => {
+        card.style.fontSize = `${baseSize}px`;
+      });
+      
+      document.querySelectorAll('.btn').forEach(btn => {
+        btn.style.fontSize = `${baseSize}px`;
+      });
+      
+      document.querySelectorAll('.score-item').forEach(item => {
+        item.style.fontSize = `${baseSize}px`;
+      });
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig: defaultConfig,
+        onConfigChange: onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.primary_color || defaultConfig.primary_color,
+              set: (value) => {
+                config.primary_color = value;
+                window.elementSdk.setConfig({ primary_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_color || defaultConfig.secondary_color,
+              set: (value) => {
+                config.secondary_color = value;
+                window.elementSdk.setConfig({ secondary_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            },
+            {
+              get: () => config.correct_color || defaultConfig.correct_color,
+              set: (value) => {
+                config.correct_color = value;
+                window.elementSdk.setConfig({ correct_color: value });
+              }
+            },
+            {
+              get: () => config.incorrect_color || defaultConfig.incorrect_color,
+              set: (value) => {
+                config.incorrect_color = value;
+                window.elementSdk.setConfig({ incorrect_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["game_title", config.game_title || defaultConfig.game_title],
+          ["instruction_text", config.instruction_text || defaultConfig.instruction_text],
+          ["success_message", config.success_message || defaultConfig.success_message]
+        ])
+      });
+    }
+
+    initializeGame();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a18f0fb03b609f8',t:'MTc2MzY1MjEzMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
